@@ -4,6 +4,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TarjanSCC implements SCCFinder {
     private int time;
@@ -65,5 +67,29 @@ public class TarjanSCC implements SCCFinder {
             }
             components.add(comp);
         }
+    }
+
+    public Graph buildCondensationGraph(Graph original, List<List<Integer>> sccs, Metrics metrics) {
+        int n = original.getN();
+        int compCount = sccs.size();
+        int[] compOf = new int[n];
+        for (int i = 0; i < sccs.size(); i++) {
+            for (int v : sccs.get(i)) compOf[v] = i;
+        }
+
+        Graph dag = new Graph(compCount, true, original.getWeightModel());
+        Set<Long> seen = new HashSet<>();
+        for (Edge e : original.getEdges()) {
+            int cu = compOf[e.getSource()];
+            int cv = compOf[e.getDestination()];
+            if (cu != cv) {
+                long key = (((long) cu) << 32) ^ (cv & 0xffffffffL);
+                if (seen.add(key)) {
+                    dag.addEdge(cu, cv, 1);
+                    if (metrics != null) metrics.incrementCounter("cond_edge");
+                }
+            }
+        }
+        return dag;
     }
 }
