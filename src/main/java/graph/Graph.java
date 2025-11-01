@@ -27,6 +27,10 @@ public class Graph {
         return n;
     }
 
+    public int getN() {
+        return n;
+    }
+
     public List<Edge> getEdges() {
         return new ArrayList<>(edges);
     }
