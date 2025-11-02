@@ -4,9 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Finds the critical path (longest path) in a directed acyclic graph (DAG).
+ * Uses topological sorting and dynamic programming for efficient computation.
+ */
 public class CriticalPathFinder {
     private static final int INF = Integer.MIN_VALUE / 4;
 
+    /**
+     * Finds the critical path (longest path) in the given DAG.
+     * 
+     * @param dag     the directed acyclic graph
+     * @param metrics optional metrics collector for performance tracking
+     * @return CriticalPathResult containing the path and its total weight
+     * @throws IllegalArgumentException if graph is null
+     */
     public CriticalPathResult findCriticalPath(Graph dag, Metrics metrics) {
         Objects.requireNonNull(dag, "Graph cannot be null");
         
@@ -39,6 +51,14 @@ public class CriticalPathFinder {
         return new CriticalPathResult(path, Math.max(0, maxDist));
     }
 
+    /**
+     * Builds adjacency list representation with edge weights.
+     *
+     * @param dag   the graph
+     * @param adj   adjacency list to populate
+     * @param indeg in-degree array to populate
+     * @param n     number of vertices
+     */
     private void buildAdjacency(Graph dag, List<List<int[]>> adj, int[] indeg, int n) {
         for (int i = 0; i < n; i++) adj.add(new ArrayList<>());
         for (Edge e : dag.getEdges()) {
@@ -47,6 +67,15 @@ public class CriticalPathFinder {
         }
     }
 
+    /**
+     * Computes topological order using Kahn's algorithm.
+     *
+     * @param adj     adjacency list
+     * @param indeg   in-degree array
+     * @param n       number of vertices
+     * @param metrics optional metrics collector
+     * @return array of vertices in topological order
+     */
     private int[] computeTopologicalOrder(List<List<int[]>> adj, int[] indeg, int n, Metrics metrics) {
         int[] order = new int[n];
         for (int i = 0; i < n; i++) order[i] = -1;
@@ -67,6 +96,18 @@ public class CriticalPathFinder {
         return order;
     }
 
+    /**
+     * Computes longest paths from all source vertices using dynamic programming.
+     *
+     * @param adj       adjacency list
+     * @param topoOrder topological order of vertices
+     * @param orderSize size of topological order
+     * @param indegCopy original in-degree array to identify sources
+     * @param dist      distance array to populate
+     * @param prev      predecessor array for path reconstruction
+     * @param n         number of vertices
+     * @param metrics   optional metrics collector
+     */
     private void computeLongestPaths(List<List<int[]>> adj, int[] topoOrder, int orderSize,
                                      int[] indegCopy, int[] dist, int[] prev, int n, Metrics metrics) {
         for (int i = 0; i < n; i++) {
@@ -89,6 +130,13 @@ public class CriticalPathFinder {
         }
     }
 
+    /**
+     * Reconstructs the path from source to the given node.
+     *
+     * @param node the destination node
+     * @param prev predecessor array
+     * @return list of vertices in the path from source to node
+     */
     private List<Integer> reconstructPath(int node, int[] prev) {
         List<Integer> path = new ArrayList<>();
         if (node == -1) return path;
