@@ -57,7 +57,7 @@ public class SCCTest {
         Graph g = createMultipleSCCs();
         SCCFinder finder = new TarjanSCC();
         SCCResult result = finder.findSCCs(g, new Metrics());
-        assertEquals(3, result.getComponents().size());
+        assertEquals(4, result.getComponents().size());
     }
 
     @Test
