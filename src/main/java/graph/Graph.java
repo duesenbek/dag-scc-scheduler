@@ -11,6 +11,7 @@ public class Graph {
     private final List<Edge> edges;
     private final boolean directed;
     private final String weightModel;
+    private int source;
 
     public Graph(int n, boolean directed, String weightModel) {
         if (n < 0) throw new IllegalArgumentException("Number of vertices must be non-negative");
@@ -18,6 +19,18 @@ public class Graph {
         this.n = n;
         this.directed = directed;
         this.weightModel = weightModel;
+        this.source = 0;
+        this.edges = new ArrayList<>();
+    }
+
+    public Graph(int n, boolean directed, String weightModel, int source) {
+        if (n < 0) throw new IllegalArgumentException("Number of vertices must be non-negative");
+        if (source < 0 || source >= n) throw new IllegalArgumentException("Source vertex out of bounds");
+        Objects.requireNonNull(weightModel, "Weight model cannot be null");
+        this.n = n;
+        this.directed = directed;
+        this.weightModel = weightModel;
+        this.source = source;
         this.edges = new ArrayList<>();
     }
 
@@ -61,10 +74,19 @@ public class Graph {
         return weightModel;
     }
 
+    public int getSource() {
+        return source;
+    }
+
+    public void setSource(int source) {
+        if (source < 0 || source >= n) throw new IllegalArgumentException("Source vertex out of bounds");
+        this.source = source;
+    }
+
     @Override
     public String toString() {
-        return String.format("Graph{n=%d, edges=%d, directed=%s, weightModel='%s'}",
-                n, edges.size(), directed, weightModel);
+        return String.format("Graph{n=%d, edges=%d, directed=%s, weightModel='%s', source=%d}",
+                n, edges.size(), directed, weightModel, source);
     }
 
     @Override
@@ -72,13 +94,13 @@ public class Graph {
         if (this == o) return true;
         if (!(o instanceof Graph)) return false;
         Graph graph = (Graph) o;
-        return n == graph.n && directed == graph.directed && 
+        return n == graph.n && directed == graph.directed && source == graph.source &&
                Objects.equals(weightModel, graph.weightModel) && 
                Objects.equals(edges, graph.edges);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(n, edges, directed, weightModel);
+        return Objects.hash(n, edges, directed, weightModel, source);
     }
 }

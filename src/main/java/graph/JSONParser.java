@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 public class JSONParser {
     private static final Pattern N_PATTERN = Pattern.compile("\"n\"\\s*:\\s*(\\d+)");
+    private static final Pattern SOURCE_PATTERN = Pattern.compile("\"source\"\\s*:\\s*(\\d+)");
     private static final Pattern DIRECTED_PATTERN = Pattern.compile("\"directed\"\\s*:\\s*(true|false)");
     private static final Pattern WEIGHT_MODEL_PATTERN = Pattern.compile("\"weightModel\"\\s*:\\s*\"([^\"]*)\"");
     private static final Pattern EDGES_BLOCK_PATTERN = Pattern.compile("\"edges\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
@@ -26,8 +27,9 @@ public class JSONParser {
         int n = extractVertexCount(json);
         boolean directed = extractDirected(json);
         String weightModel = extractWeightModel(json);
+        int source = extractSource(json, n);
         
-        Graph graph = new Graph(n, directed, weightModel);
+        Graph graph = new Graph(n, directed, weightModel, source);
         addEdgesToGraph(graph, json);
         
         return graph;
@@ -71,6 +73,18 @@ public class JSONParser {
             }
         }
         return maxVertex >= 0 ? maxVertex + 1 : 0;
+    }
+
+    private int extractSource(String json, int n) {
+        Matcher m = SOURCE_PATTERN.matcher(json);
+        if (m.find()) {
+            int source = Integer.parseInt(m.group(1));
+            if (source < 0 || source >= n) {
+                throw new IllegalArgumentException("Source vertex out of bounds: " + source);
+            }
+            return source;
+        }
+        return 0;
     }
 
     private void addEdgesToGraph(Graph graph, String json) {
