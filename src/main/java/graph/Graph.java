@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Graph {
     private final int n;
@@ -36,6 +37,20 @@ public class Graph {
 
     public List<Edge> getEdges() {
         return Collections.unmodifiableList(new ArrayList<>(edges));
+    }
+
+    public List<Edge> getEdgesFrom(int u) {
+        if (u < 0 || u >= n) throw new IllegalArgumentException("Vertex out of bounds");
+        return edges.stream()
+                .filter(edge -> edge.getSource() == u)
+                .collect(Collectors.toList());
+    }
+
+    public List<Edge> getEdgesTo(int v) {
+        if (v < 0 || v >= n) throw new IllegalArgumentException("Vertex out of bounds");
+        return edges.stream()
+                .filter(edge -> edge.getDestination() == v)
+                .collect(Collectors.toList());
     }
 
     public boolean isDirected() {
