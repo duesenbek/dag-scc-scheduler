@@ -101,6 +101,8 @@ The following table summarizes the results of running the pipeline on all 9 data
 | `large_graph_3.json`  | 50       | 56    | 38         | 41                 | 37            | 5         | 243       |
 
 ### Analysis of Results
+<img width="1231" height="834" alt="Снимок экрана 2025-11-02 220537" src="https://github.com/user-attachments/assets/54f0fa63-8a9c-4413-aff5-c0f157bdb740" />
+<img width="778" height="613" alt="Снимок экрана 2025-11-02 220421" src="https://github.com/user-attachments/assets/805cdbf6-c849-48b8-ab47-009d251a904f" />
 
 1.  **Effect of SCCs on Complexity**: The number of **Total Operations** is not solely dependent on the number of vertices and edges. For instance, `medium_graph_3.json` (20 vertices) required fewer operations (59) than `medium_graph_2.json` (18 vertices, 114 ops). This is because compressing its 3 large SCCs significantly reduced the size of the condensation graph, making topological sort and pathfinding much faster.
 
@@ -109,8 +111,10 @@ The following table summarizes the results of running the pipeline on all 9 data
 3.  **Performance on Large Graphs**: The iterative implementation of Tarjan's algorithm successfully processed the 50-node graph without stack overflow issues. The execution time remained low (under 5ms), demonstrating the efficiency of the O(V+E) approach.
 
 ---
+<img width="784" height="616" alt="Снимок экрана 2025-11-02 220453" src="https://github.com/user-attachments/assets/5deeeca0-bb9e-4bf0-953f-8e1818358dec" />
 
 ## Conclusions and Recommendations
+<img width="799" height="615" alt="Снимок экрана 2025-11-02 220500" src="https://github.com/user-attachments/assets/4349f09f-8ddd-44cf-9fbb-2a4c36cbcaeb" />
 
 - **When to Use**: This pipeline is highly effective for any task-scheduling problem where dependencies can be cyclic. Compressing cycles into single nodes simplifies the problem to a standard DAG analysis, which is computationally efficient.
 
