@@ -4,44 +4,65 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JSONParser {
+    private static final Pattern N_PATTERN = Pattern.compile("\"n\"\\s*:\\s*(\\d+)");
+    private static final Pattern DIRECTED_PATTERN = Pattern.compile("\"directed\"\\s*:\\s*(true|false)");
+    private static final Pattern WEIGHT_MODEL_PATTERN = Pattern.compile("\"weightModel\"\\s*:\\s*\"([^\"]*)\"");
+    private static final Pattern EDGES_BLOCK_PATTERN = Pattern.compile("\"edges\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
+    private static final Pattern EDGE_PATTERN = Pattern.compile(
+        "\\{[^}]*?\"u\"\\s*:\\s*(\\d+)\\s*,[^}]*?\"v\"\\s*:\\s*(\\d+)\\s*,[^}]*?\"w\"\\s*:\\s*(\\d+)[^}]*?\\}",
+        Pattern.DOTALL
+    );
+
     public Graph parseTasksJSON(String filePath) {
-        String json;
+        Objects.requireNonNull(filePath, "File path cannot be null");
+        
+        String json = readFile(filePath);
+        
+        int n = extractVertexCount(json);
+        boolean directed = extractDirected(json);
+        String weightModel = extractWeightModel(json);
+        
+        Graph graph = new Graph(n, directed, weightModel);
+        addEdgesToGraph(graph, json);
+        
+        return graph;
+    }
+
+    private String readFile(String filePath) {
         try {
-            json = Files.readString(Paths.get(filePath), StandardCharsets.UTF_8);
+            return Files.readString(Paths.get(filePath), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to read file: " + filePath, e);
         }
+    }
 
-        Pattern nPat = Pattern.compile("\"n\"\\s*:\\s*(\\d+)");
-        Pattern dirPat = Pattern.compile("\"directed\"\\s*:\\s*(true|false)");
-        Pattern wmPat = Pattern.compile("\"weightModel\"\\s*:\\s*\"([^\"]*)\"");
-        Pattern edgesBlockPat = Pattern.compile("\"edges\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
-        Pattern edgePat = Pattern.compile("\\{[^}]*?\"u\"\\s*:\\s*(\\d+)\\s*,[^}]*?\"v\"\\s*:\\s*(\\d+)\\s*,[^}]*?\"w\"\\s*:\\s*(\\d+)[^}]*?\\}", Pattern.DOTALL);
+    private int extractVertexCount(String json) {
+        Matcher m = N_PATTERN.matcher(json);
+        if (m.find()) return Integer.parseInt(m.group(1));
+        return inferVertexCount(json);
+    }
 
-        int n = -1;
-        boolean directed = true;
-        String weightModel = "integer";
+    private boolean extractDirected(String json) {
+        Matcher m = DIRECTED_PATTERN.matcher(json);
+        return !m.find() || Boolean.parseBoolean(m.group(1));
+    }
 
-        Matcher m;
-        m = nPat.matcher(json);
-        if (m.find()) n = Integer.parseInt(m.group(1));
+    private String extractWeightModel(String json) {
+        Matcher m = WEIGHT_MODEL_PATTERN.matcher(json);
+        return m.find() ? m.group(1) : "integer";
+    }
 
-        m = dirPat.matcher(json);
-        if (m.find()) directed = Boolean.parseBoolean(m.group(1));
-
-        m = wmPat.matcher(json);
-        if (m.find()) weightModel = m.group(1);
-
+    private int inferVertexCount(String json) {
         int maxVertex = -1;
-        Matcher edgesBlockMatcher = edgesBlockPat.matcher(json);
-        String edgesBlock = null;
+        Matcher edgesBlockMatcher = EDGES_BLOCK_PATTERN.matcher(json);
         if (edgesBlockMatcher.find()) {
-            edgesBlock = edgesBlockMatcher.group(1);
-            Matcher em = edgePat.matcher(edgesBlock);
+            String edgesBlock = edgesBlockMatcher.group(1);
+            Matcher em = EDGE_PATTERN.matcher(edgesBlock);
             while (em.find()) {
                 int u = Integer.parseInt(em.group(1));
                 int v = Integer.parseInt(em.group(2));
@@ -49,19 +70,20 @@ public class JSONParser {
                 if (v > maxVertex) maxVertex = v;
             }
         }
+        return maxVertex >= 0 ? maxVertex + 1 : 0;
+    }
 
-        int finalN = (n > -1) ? n : (maxVertex >= 0 ? maxVertex + 1 : 0);
-        Graph g = new Graph(finalN, directed, weightModel);
-
-        if (edgesBlock != null) {
-            Matcher em = edgePat.matcher(edgesBlock);
-            while (em.find()) {
-                int u = Integer.parseInt(em.group(1));
-                int v = Integer.parseInt(em.group(2));
-                int w = Integer.parseInt(em.group(3));
-                g.addEdge(u, v, w);
-            }
+    private void addEdgesToGraph(Graph graph, String json) {
+        Matcher edgesBlockMatcher = EDGES_BLOCK_PATTERN.matcher(json);
+        if (!edgesBlockMatcher.find()) return;
+        
+        String edgesBlock = edgesBlockMatcher.group(1);
+        Matcher em = EDGE_PATTERN.matcher(edgesBlock);
+        while (em.find()) {
+            int u = Integer.parseInt(em.group(1));
+            int v = Integer.parseInt(em.group(2));
+            int w = Integer.parseInt(em.group(3));
+            graph.addEdge(u, v, w);
         }
-        return g;
     }
 }

@@ -51,7 +51,7 @@ public class TarjanSCC implements SCCFinder {
         for (int w : adj.get(v)) {
             if (index[w] == -1) {
                 strongConnect(w, adj, metrics);
-                low[v] = Math.max(Math.min(low[v], low[w]), low[v]);
+                low[v] = Math.min(low[v], low[w]);
             } else if (onStack[w]) {
                 low[v] = Math.min(low[v], index[w]);
             }
